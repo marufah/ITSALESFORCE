@@ -1,4 +1,4 @@
-trigger UpdateSendEmail on Case_Recurring_Email__c (after update) {
+ trigger UpdateSendEmail on Case_Recurring_Email__c (after update) {
  
  	List<Case> caslist = new List<Case>();
  	Set<ID> caslist1 = new Set<ID>();
@@ -49,7 +49,7 @@ trigger UpdateSendEmail on Case_Recurring_Email__c (after update) {
  
  	}
  
-
+-	for(Case c1 : [select Id,Send_Email__c,Status,Pending_User_9_days__c,Researching_Count__c  from Case where Id IN:CaseResearchlist ]){
 +	List<Case> cases = new List<Case>();
 +	for(Case c1 : [select Id,Send_Email__c,Status,Pending_User_9_days__c,Researching_Count__c  from Case 
 +					where Id IN:CaseResearchlist or id IN :caslistRepairsComplete.keyset() or id IN:caslistReturnedtoCust.keyset()]){
@@ -63,7 +63,9 @@ trigger UpdateSendEmail on Case_Recurring_Email__c (after update) {
  			}
  			caslist.add(c);        
  		}
-
+-	}          
+-
+-	Update caslist;
 +		if(caslistRepairsComplete.containskey(c1.id)){
 +			c.status = caslistRepairsComplete.get(c1.id);
 +			cases.add(c);
@@ -81,3 +83,4 @@ trigger UpdateSendEmail on Case_Recurring_Email__c (after update) {
 +		update cases;
 +		
  } 
+API 

@@ -1,4 +1,4 @@
-WELCOME TO THE TRIGGER WORLD
+WELCOME TO THE TRIGGER WORLD VERSION NUMBER 02
 
 trigger BBWPrimaryGroupAssignment on Case (before insert, before update) {
         if(globalcomponent.getapiuser(userinfo.getuserid()) != true ){

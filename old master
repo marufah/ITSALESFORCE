@@ -85,7 +85,22 @@ trigger BBWPrimaryGroupAssignment on Case (before insert, before update) {
 -      }
 -    
 -      }
-
++    {
++    	for(case c:trigger.new)
++      	{
++      		Case oldc = Trigger.oldMap.get(c.ID);      
++            if(c.Status != oldc.Status)
++            	deleteId.add(c.ID);             //TP 2875 include status change triggered from e mails
++       		if((oldc.Last_Activity_Date_Time__c != c.Last_Activity_Date_Time__c) && (c.status == '3rd Party - Transact Use')){
++           		deleteId.add(c.ID);
++       			caslist1.add(c);
++       		}
++       		oldc = Trigger.oldMap.get(c.ID);
++			if(oldc.Status != c.Status && (c.status == 'Repairs Complete' || c.status == 'Returned to Customer') && c.Case_record__c == 'RMA'){                
++                caslist1.add(c);
++            }              
++      	}
++	}
        
          if(closeallmile.size() > 0){
              Datetime t = System.now();
@@ -120,6 +135,13 @@ trigger BBWPrimaryGroupAssignment on Case (before insert, before update) {
 -                cr.Case__c = c.ID; 
 -                crlist.add(cr);
 -            }
++    if(caslist1.size() > 0){
++        for(Case c : caslist1){
++            Case_Recurring_Email__c cr = new Case_Recurring_Email__c();
++            cr.Case__c = c.ID;            
++            if(c.status == 'Repairs Complete' || c.status == 'Returned to Customer')
++            	cr.New_Case_Status__c = ''; 
++            crlist.add(cr);
          }
          
          Upsert crlist;
@@ -272,4 +294,4 @@ trigger BBWPrimaryGroupAssignment on Case (before insert, before update) {
      }
              
  }
- 
+View  

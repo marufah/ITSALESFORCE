@@ -1,5 +1,5 @@
-# ITSALESFORCE
-It is for sales cloud
+WELCOME TO THE TRIGGER WORLD
+
 trigger BBWPrimaryGroupAssignment on Case (before insert, before update) {
         if(globalcomponent.getapiuser(userinfo.getuserid()) != true ){
          CaseTriggerHandler.hasBBWPrimaryRun = true;

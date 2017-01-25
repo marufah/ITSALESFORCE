@@ -1,8 +1,10 @@
-trigger UpdateSendEmail on Case_Recurring_Email__c (after update) {
+ trigger UpdateSendEmail on Case_Recurring_Email__c (after update) {
  
  	List<Case> caslist = new List<Case>();
  	Set<ID> caslist1 = new Set<ID>();
  	Set<ID> caslist2 = new Set<ID>();
++	Map<ID, String> caslistRepairsComplete = new Map<ID, String>();
++	Map<ID, String> caslistReturnedtoCust = new Map<ID, String>();
  	set<id> CaseResearchlist= new Set<ID>();
  	for(Case_Recurring_Email__c d : Trigger.New){
  		Case_Recurring_Email__c oldd = Trigger.oldMap.get(d.ID);
@@ -15,7 +17,14 @@ trigger UpdateSendEmail on Case_Recurring_Email__c (after update) {
  		if(oldd.Researching_Count__c != d.Researching_Count__c){
  			CaseResearchlist.add(d.Case__c);
  		}
-
++		system.debug('DEBUG:d.Status__c:'+d.Status__c);
++		system.debug('DEBUG:d.New_Case_Status__c:'+d.New_Case_Status__c);
++		if(oldd != null &&  d.Status__c == 'Repairs Complete' && d.New_Case_Status__c == 'Needs Attention'){
++			caslistRepairsComplete.put(d.Case__c, d.New_Case_Status__c);
++		}
++		if(oldd != null && d.Status__c == 'Returned to Customer' && d.New_Case_Status__c == 'Closed'){
++			caslistReturnedtoCust.put(d.Case__c, d.New_Case_Status__c);
++		}
  	}
  
  	for(Case c1 : [select Id,Send_Email__c,Status,Pending_User_9_days__c  from Case where Id IN: caslist1 OR ID IN: caslist2]){
@@ -41,6 +50,9 @@ trigger UpdateSendEmail on Case_Recurring_Email__c (after update) {
  	}
  
 -	for(Case c1 : [select Id,Send_Email__c,Status,Pending_User_9_days__c,Researching_Count__c  from Case where Id IN:CaseResearchlist ]){
++	List<Case> cases = new List<Case>();
++	for(Case c1 : [select Id,Send_Email__c,Status,Pending_User_9_days__c,Researching_Count__c  from Case 
++					where Id IN:CaseResearchlist or id IN :caslistRepairsComplete.keyset() or id IN:caslistReturnedtoCust.keyset()]){
  		Case c = new Case(ID = c1.ID);
  		if(CaseResearchlist.contains(c1.id))
  		{
@@ -54,4 +66,21 @@ trigger UpdateSendEmail on Case_Recurring_Email__c (after update) {
 -	}          
 -
 -	Update caslist;
++		if(caslistRepairsComplete.containskey(c1.id)){
++			c.status = caslistRepairsComplete.get(c1.id);
++			cases.add(c);
++		}
++		if(caslistReturnedtoCust.containsKey(c1.id)){
++			c.status = caslistRepairsComplete.get(c1.id);
++			cases.add(c);
++		}
++	}
++	system.debug('DEBUG:caslist:'+caslist);
++	system.debug('DEBUG:cases:'+cases);
++	if(caslist.size() > 0)
++		update caslist;
++	if(cases.size() > 0)
++		update cases;
++		
  } 
+API 
